@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PR Risk Radar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1 class="title">PR Risk Radar</h1>
+            <p class="subtitle">Catch pull requests whose titles understate what the diff actually does</p>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="card provider-status">
+            {% if provider_info %}
+                <div class="status-badge active">
+                    <span class="dot"></span>
+                    <span>Active Provider: <strong>{{ provider_info.name }}</strong> (Model: <code>{{ provider_info.model }}</code>)</span>
+                </div>
+            {% else %}
+                <div class="status-badge inactive">
+                    <span class="dot"></span>
+                    <span>{{ warning_msg or "No active LLM provider configured." }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="card form-card">
+            <form id="analyze-form" action="{{ url_for('analyze') }}" method="POST">
+                <div class="form-group">
+                    <label for="pr_url">GitHub PR URL or Reference</label>
+                    <input
+                        type="text"
+                        id="pr_url"
+                        name="pr_url"
+                        placeholder="https://github.com/owner/repo/pull/123 or owner/repo#123"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="github_token">GitHub Personal Access Token <span class="optional">(Optional - increases rate limit to 5,000/hr)</span></label>
+                    <input
+                        type="password"
+                        id="github_token"
+                        name="github_token"
+                        placeholder="ghp_... or github_pat_..."
+                        autocomplete="off"
+                    >
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn btn-primary">
+                    <span class="btn-text">Analyze PR Risk</span>
+                </button>
+            </form>
+
+            <div id="loading-spinner" class="loading-container hidden" hidden>
+                <div class="spinner"></div>
+                <div class="loading-text">
+                    <strong>Analyzing PR Diff & Heuristics...</strong>
+                    <p class="loading-subtext">Fetching diff from GitHub REST API and prompting model for risk assessment. This typically takes ~20–30 seconds.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('analyze-form').addEventListener('submit', function() {
+            var btn = document.getElementById('submit-btn');
+            var spinner = document.getElementById('loading-spinner');
+
+            btn.disabled = true;
+            btn.classList.add('disabled');
+            spinner.classList.remove('hidden');
+            spinner.removeAttribute('hidden');
+        });
+    </script>
+</body>
+</html>

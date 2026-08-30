@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Report - PR #{{ pr_data.number }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <div class="top-nav">
+            <a href="{{ url_for('index') }}" class="back-link">&larr; Analyze Another PR</a>
+            <span class="timing-info">Fetched in {{ gh_elapsed }}s | Evaluated in {{ llm_elapsed }}s</span>
+        </div>
+
+        <header class="header result-header">
+            <div class="repo-meta">
+                <a href="{{ pr_data.html_url }}" target="_blank" rel="noopener" class="pr-title-link">
+                    <h1>{{ pr_data.title }} <span class="pr-number">#{{ pr_data.number }}</span></h1>
+                </a>
+                <p class="pr-sub">by <strong>{{ pr_data.user.login }}</strong> in <code>{{ pr_data.base.repo.full_name }}</code></p>
+            </div>
+        </header>
+
+        {% set risk_class = report.risk_level|lower %}
+        {% if risk_class not in ['low', 'medium', 'high'] %}
+            {% set risk_class = 'medium' %}
+        {% endif %}
+
+        <!-- Risk Gauge & Overview -->
+        <div class="card risk-hero-card risk-panel-{{ risk_class }}">
+            <div class="gauge-container">
+                <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+                    <circle class="progress-ring-bg" cx="60" cy="60" r="50"></circle>
+                    <circle
+                        class="progress-ring-fill fill-{{ risk_class }}"
+                        cx="60" cy="60" r="50"
+                        stroke-dasharray="314.159"
+                        stroke-dashoffset="{{ 314.159 - (314.159 * (report.risk_score or 0) / 100) }}"
+                    ></circle>
+                </svg>
+                <div class="gauge-text">
+                    <span class="score-value">{{ report.risk_score or 0 }}</span>
+                    <span class="score-max">/100</span>
+                </div>
+            </div>
+
+            <div class="risk-hero-details">
+                <div class="risk-badge badge-{{ risk_class }}">
+                    {{ report.risk_level }} Risk
+                </div>
+                <h2 class="section-title">Risk Assessment Summary</h2>
+                <p class="summary-text">{{ report.summary | backtick_code }}</p>
+            </div>
+        </div>
+
+        <!-- Signal Stats Grid -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <span class="stat-label">Files Changed</span>
+                <span class="stat-value">{{ report.signals.total_files }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Additions / Deletions</span>
+                <span class="stat-value">
+                    <span class="additions">+{{ report.signals.total_additions }}</span>
+                    <span class="deletions">-{{ report.signals.total_deletions }}</span>
+                </span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Code vs Test Files</span>
+                <span class="stat-value">{{ report.signals.non_test_files_count }} code / {{ report.signals.test_files_count }} tests</span>
+            </div>
+        </div>
+
+        <!-- Categories Touched -->
+        {% if report.categories_touched %}
+            <div class="card section-card">
+                <h3 class="card-heading">Sensitive Categories Touched</h3>
+                <div class="tag-cloud">
+                    {% for cat in report.categories_touched %}
+                        <span class="category-tag">{{ cat }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Specific Concerns -->
+        {% if report.concerns %}
+            <div class="section-container">
+                <h3 class="card-heading">Specific Risk Concerns</h3>
+                <div class="cards-list">
+                    {% for concern in report.concerns %}
+                        <div class="concern-card concern-border-{{ risk_class }}">
+                            <p>{{ concern | backtick_code }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Reviewer Focus Areas -->
+        {% if report.reviewer_focus %}
+            <div class="section-container">
+                <h3 class="card-heading">Recommended Reviewer Focus</h3>
+                <div class="cards-list">
+                    {% for item in report.reviewer_focus %}
+                        <div class="focus-card focus-border-{{ risk_class }}">
+                            <p>{{ item | backtick_code }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Sensitive Files Table -->
+        <div class="card section-card">
+            <h3 class="card-heading">Sensitive Files Detected</h3>
+            {% set has_sensitive = false %}
+            {% for cat, matched_files in report.signals.sensitive_matches.items() %}
+                {% if matched_files %}
+                    {% set has_sensitive = true %}
+                {% endif %}
+            {% endfor %}
+
+            {% if has_sensitive %}
+                <div class="table-wrapper">
+                    <table class="sensitive-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>File Path</th>
+                                <th>Status</th>
+                                <th>Changes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat, matched_files in report.signals.sensitive_matches.items() %}
+                                {% for file in matched_files %}
+                                    <tr>
+                                        <td><span class="category-badge">{{ cat }}</span></td>
+                                        <td><code>{{ file.filename }}</code></td>
+                                        <td><span class="status-tag status-{{ file.status }}">{{ file.status }}</span></td>
+                                        <td>
+                                            <span class="additions">+{{ file.additions }}</span>
+                                            <span class="deletions">-{{ file.deletions }}</span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="no-data">No sensitive path patterns were matched in this PR's diff.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
