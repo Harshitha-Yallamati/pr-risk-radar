@@ -16,17 +16,35 @@ It parses GitHub PR references, fetches the PR metadata and changed files diff f
 
 ---
 
+## Application Screenshots
+
+Screenshots of the PR Risk Radar web interface are available in the [`docs/`](docs/) directory:
+
+### Landing Page
+![Landing Page](docs/Landingpage.png)
+*The landing page allows users to enter a GitHub PR URL or reference along with an optional GitHub Token and highlights the active LLM provider.*
+
+### High Risk Assessment
+![High Risk Assessment](docs/HighRisk.png)
+*Risk assessment output for a high-risk PR, highlighting security concerns, sensitive files touched, and specific reviewer focus areas.*
+
+### Medium Risk Assessment
+![Medium Risk Assessment](docs/MediumRisk.png)
+*Risk assessment report for a medium-risk PR showing heuristics breakdown and categorized sensitive files.*
+
+---
+
 ## Example Test PR URLs & References
 
 You can test PR Risk Radar using real open-source GitHub pull request URLs or short references:
 
-| Category / Focus Area | Example PR Reference | Description |
+| Risk Level | Example PR | Description |
 | :--- | :--- | :--- |
-| **High Risk (Auth / Security)** | `https://github.com/fastapi/fastapi/pull/10537` | Changes touching authentication / core middleware components |
-| **High Risk (Infra / CI / Workflow)** | `https://github.com/pallets/flask/pull/5200` | Refactoring CI workflow & build infrastructure |
-| **Medium Risk (Database / Schema)** | `https://github.com/django/django/pull/17550` | Database backend / ORM query changes |
-| **Medium Risk (Short Reference Format)** | `psf/requests#6445` | Example using short reference format (`owner/repo#123`) |
-| **Low Risk (Documentation / Typos)** | `https://github.com/psf/requests/pull/6620` | Minor docs fix / markdown typo correction |
+| 🔴 **Strong security test** | [Requests #7569](https://github.com/psf/requests/pull/7569) | Silently deletes all 8 GitHub Actions CI/CD workflows including CodeQL security scanning, and leaks raw password values into logs. The PR title claims a minor deprecation-warning fix. Demonstrates the core value: catching hidden malicious or negligent changes. |
+| 🔴 **TLS/Security-sensitive** | [Requests #7582](https://github.com/psf/requests/pull/7582) | Raise FileNotFoundError for missing TLS material. Tests detection of security and TLS-related code changes. |
+| 🟠 **Authentication-related** | [Requests #7413](https://github.com/psf/requests/pull/7413) | Fix HTTPDigestAuth URI field. Good test for your authentication-sensitive file classification. |
+| 🟢 **Low-risk control** | [Flask #6043](https://github.com/pallets/flask/pull/6043) | Documentation-only typo fixes. Demonstrates that PR Risk Radar correctly identifies low-risk changes and doesn't flag everything as high risk. |
+| 🟢 **Another useful control** | [Requests #7579](https://github.com/psf/requests/pull/7579) | SSL verification troubleshooting documentation. Tests whether the tool distinguishes mentioning security concerns from actually modifying security-sensitive code. |
 
 ---
 
