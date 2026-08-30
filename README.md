@@ -16,6 +16,20 @@ It parses GitHub PR references, fetches the PR metadata and changed files diff f
 
 ---
 
+## Example Test PR URLs & References
+
+You can test PR Risk Radar using real open-source GitHub pull request URLs or short references:
+
+| Category / Focus Area | Example PR Reference | Description |
+| :--- | :--- | :--- |
+| **High Risk (Auth / Security)** | `https://github.com/fastapi/fastapi/pull/10537` | Changes touching authentication / core middleware components |
+| **High Risk (Infra / CI / Workflow)** | `https://github.com/pallets/flask/pull/5200` | Refactoring CI workflow & build infrastructure |
+| **Medium Risk (Database / Schema)** | `https://github.com/django/django/pull/17550` | Database backend / ORM query changes |
+| **Medium Risk (Short Reference Format)** | `psf/requests#6445` | Example using short reference format (`owner/repo#123`) |
+| **Low Risk (Documentation / Typos)** | `https://github.com/psf/requests/pull/6620` | Minor docs fix / markdown typo correction |
+
+---
+
 ## Setup & Installation
 
 1. **Clone the repository and create a virtual environment**:
