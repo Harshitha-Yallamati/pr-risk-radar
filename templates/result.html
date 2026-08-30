@@ -43,8 +43,10 @@
                     ></circle>
                 </svg>
                 <div class="gauge-text">
-                    <span class="score-value">{{ report.risk_score or 0 }}</span>
-                    <span class="score-max">/100</span>
+                    <div class="score-value-row">
+                        <span class="score-value">{{ report.risk_score or 0 }}</span><span class="score-percent">%</span>
+                    </div>
+                    <span class="score-max">Risk Score</span>
                 </div>
             </div>
 
