@@ -78,6 +78,25 @@ You can override the default model for any provider by setting `LLM_MODEL` in yo
 
 ---
 
+## Free Hosting Deployment Guide (Render / Koyeb / Railway)
+
+### Deploying on Render (Recommended Free Tier)
+
+1. Sign in to [Render](https://render.com) and click **New +** -> **Web Service**.
+2. Connect your GitHub repository (`Harshitha-Yallamati/pr-risk-radar`).
+3. Set the following build and start parameters:
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn --timeout 120 --workers 1 --threads 4 app:app`
+4. Add **Environment Variables** in the Render dashboard:
+   - `LATENTSTACK_API_KEY` (or `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, etc.)
+   - `GITHUB_TOKEN` (Recommended so shared Render IPs don't hit GitHub's 60 req/hr unauthenticated limit)
+   - `PORT`: `10000` (or leave default, Render sets `PORT` automatically)
+   - `SECRET_KEY`: A random secret key string
+5. Click **Deploy Web Service**.
+
+---
+
 ## Production Deployment Notes (e.g. Render)
 
 - **Gunicorn Timeout**: When deploying to platforms like Render, configure the start command with a timeout of 120 seconds:
